@@ -11,6 +11,7 @@ function QRCode(){
 
 QRCode.prototype = {
 	getContsnts : function(imagedata){
+		imagedata = this.binarize(imagedata, 0.5);
 		this.readData(imagedata);
 		var simbolsize = version * 4 + 17;
 		var mode = true;
@@ -54,6 +55,32 @@ QRCode.prototype = {
 		dataCode.makeDataBlock(version,ecl);
 		this.sirial = dataCode.silialize(version,ecl);
 		return this.getString();
+	},
+	/**
+	 * ImageDataのニ値化
+	 * 
+	 * @param imageData 変換対象のImageData
+	 * @param threshold 閾値 0 ～ 1.0 デフォルト0.5
+	 * @return 変換後のImageData
+	 */
+	binarize : function (imageData, threshold) {
+	    var pixels = imageData.data;
+	    var length = pixels.length;
+
+	    if (isNaN(threshold)) {
+	        threshold = 0.5;
+	    }
+
+	    threshold *= 255;
+
+	    for (var i = 0; i < length;) {
+	        var average = pixels[i] + pixels[i + 1] + pixels[i + 2] / 3;
+
+	        pixels[i++] = pixels[i++] = pixels[i++] = average <= threshold ? 0 : 255;
+	        pixels[i++] = 255;
+	    }
+
+	    return imageData;
 	},
 	/*
 	 * イメージデータをモジュールに変換
@@ -637,29 +664,6 @@ function RGBColor(red,green,blue,alpha){
 			return true;
 		}else{
 			return false;
-		}
-	},
-	/*
-	 * 閾値
-	 * Red : 127
-	 * Green :127
-	 * Blue :127
-	 */
-	this.ToGrayscale = function () {
-		if(this.red > 127){
-			this.red = 255;
-		}else{
-			this.red = 0;
-		}
-		if(this.green > 127){
-			this.green = 255;
-		}else{
-			this.green = 0;
-		}
-		if(this.blue > 127){
-			this.blue = 255;
-		}else{
-			this.blue = 0;
 		}
 	}
 }
