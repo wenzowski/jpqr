@@ -587,7 +587,8 @@ QRCode.prototype = {
 				sjis_encoded += String.fromCharCode(byte);
 			}
 		}
-		str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
+		str = window["Unescape"+GetEscapeCodeType(sjis_encoded)](sjis_encoded);
+//		str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
 		
 		return str;
 	},
@@ -659,7 +660,6 @@ function RGBColor(red,green,blue,alpha){
 	this.alpha = alpha;
 	
 	this.isDark = function(){
-		this.ToGrayscale();
 		if(this.red == 0 && this.blue == 0 && this.green == 0){
 			return true;
 		}else{
