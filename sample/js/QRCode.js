@@ -576,15 +576,15 @@ QRCode.prototype = {
         // 8bitByteモードでSJISを使うときの判定を追加
         for(i = 0;i < str_num;i++){
             var temp = bodybits.substr(i * 8,8);
-            var byte = parseInt(temp,2);
-            if(this.isSJISEncode(byte)){
-                sjis_encoded += "%" + byte.toString(16);
+            var bytes = parseInt(temp,2);
+            if(this.isSJISEncode(bytes)){
+                sjis_encoded += "%" + bytes.toString(16);
                 byte_flag = true;
             }else if(byte_flag){
-                sjis_encoded += "%" + byte.toString(16);
+                sjis_encoded += "%" + bytes.toString(16);
                 byte_flag = false;
             }else{
-                sjis_encoded += String.fromCharCode(byte);
+                sjis_encoded += String.fromCharCode(bytes);
             }
         }
         str = window["Unescape"+GetEscapeCodeType(sjis_encoded)](sjis_encoded);
@@ -595,12 +595,12 @@ QRCode.prototype = {
     /*
      * 8bitBytemode SJIS
      */
-    isSJISEncode : function(byte){
+    isSJISEncode : function(bytes){
         // SJIS low
-        if(byte >= 128 && byte <= 159){
+        if(bytes >= 128 && bytes <= 159){
             return true;
         //SJIS high
-        }else if(byte >= 224 && byte <= 255){
+        }else if(bytes >= 224 && bytes <= 255){
             return true;
         }
         return false;
@@ -753,7 +753,7 @@ function BlockMap(version,errorCorrectLevel){
 	 	// 39
 		[[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16]],
 	 	// 40
-		[[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],
+		[[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]]
      ];
 
     var data = 0;
