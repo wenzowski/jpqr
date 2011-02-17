@@ -14,6 +14,7 @@ QRCode.prototype = {
         imagedata = this.binarize(imagedata, 0.5);
         this.readData(imagedata);
         var simbolsize = version * 4 + 17;
+		this.version = version;
         var mode = true;
         var ecl = 0;
         if(errorCorrectLevel == "01"){
@@ -109,7 +110,9 @@ QRCode.prototype = {
             }
         }
         modulesize = (findpoint[1] -firstpoint[1]) / 7;
+		modulesize = Math.floor(modulesize);
         version = (((lastpoint[1] - firstpoint[1]) + 1) / modulesize - 17) / 4;
+		version = Math.floor(version);
         var simbolsize = version * 4 + 17;
         // simbol matrix init
         var pix = new Array(simbolsize);
@@ -118,8 +121,10 @@ QRCode.prototype = {
         }
         for(i = 0;i < simbolsize;i++){
             for(j = 0;j < simbolsize;j++){
-                point_y = firstpoint[0] + (i * modulesize);
-                point_x = firstpoint[1] + (j * modulesize);
+				half = modulesize / 2;
+				half = Math.floor(half);
+				point_y = firstpoint[0] + (i * modulesize) + half;
+				point_x = firstpoint[1] + (j * modulesize) + half;
                 pix[i][j] = imagedata.getPoints(point_x,point_y).isDark(); 
             }
         }

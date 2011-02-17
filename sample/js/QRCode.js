@@ -1,4 +1,4 @@
-function QRCode(){
+function QRCode() {
     this.XOR = "101010000010010"; // 0x5412
     this.version = null; // 型
     this.errorCorrectLevel = null; // 誤り訂正レベル 01=L 00=M 11=Q 10=H
@@ -14,6 +14,7 @@ QRCode.prototype = {
         imagedata = this.binarize(imagedata, 0.5);
         this.readData(imagedata);
         var simbolsize = version * 4 + 17;
+		this.version = version;
         var mode = true;
         var ecl = 0;
         if(errorCorrectLevel == "01"){
@@ -58,7 +59,7 @@ QRCode.prototype = {
     },
     /**
      * ImageDataのニ値化
-     * 
+     *
      * @param imageData 変換対象のImageData
      * @param threshold 閾値 0 ～ 1.0 デフォルト0.5
      * @return 変換後のImageData
@@ -109,7 +110,9 @@ QRCode.prototype = {
             }
         }
         modulesize = (findpoint[1] -firstpoint[1]) / 7;
+		modulesize = Math.floor(modulesize);
         version = (((lastpoint[1] - firstpoint[1]) + 1) / modulesize - 17) / 4;
+		version = Math.floor(version);
         var simbolsize = version * 4 + 17;
         // simbol matrix init
         var pix = new Array(simbolsize);
@@ -118,17 +121,19 @@ QRCode.prototype = {
         }
         for(i = 0;i < simbolsize;i++){
             for(j = 0;j < simbolsize;j++){
-                point_y = firstpoint[0] + (i * modulesize);
-                point_x = firstpoint[1] + (j * modulesize);
-                pix[i][j] = imagedata.getPoints(point_x,point_y).isDark(); 
+				half = modulesize / 2;
+				half = Math.floor(half);
+				point_y = firstpoint[0] + (i * modulesize) + half;
+				point_x = firstpoint[1] + (j * modulesize) + half;
+                pix[i][j] = imagedata.getPoints(point_x,point_y).isDark();
             }
         }
 
         this.pixcel = pix;
-        
+
         var format_info1 = "";
         var format_info2 = "";
-        
+
         // [8][0]
         if(this.pixcel[8][0]){
             format_info1 = "1";
@@ -219,7 +224,7 @@ QRCode.prototype = {
         }else{
             format_info1 += "0";
         }
-        
+
         for(i = 1;i < 8;i++){
             if(this.pixcel[simbolsize - i][8]){
                 format_info2 += "1";
@@ -252,14 +257,14 @@ QRCode.prototype = {
         this.makeFunctionPattern();
     },
     getDataBlock : function(){
-        
+
     },
     /*
      * アンマスク
      */
     unmusk : function(i,j){
         switch (maskpattern){
-        case "000" : 
+        case "000" :
                 if((i + j) % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -268,7 +273,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "001" : 
+        case "001" :
                 if(i % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -341,10 +346,10 @@ QRCode.prototype = {
      */
     isFunctionPattern : function(i,j){
         return this.functionPattern[i][j];
-        
+
     },
     /*
-     * 
+     *
      */
     blockMap : function(){
         var dataCode = new Array();
@@ -386,7 +391,7 @@ QRCode.prototype = {
         }
         this.functionPattern = funcpattern;
         // 位置合わせパターン
-        alignment_pattern = 
+        alignment_pattern =
             [[],[6, 18],[6, 22],[6, 26],[6, 30],[6, 34],[6, 22, 38],[6, 24, 42],
              [6, 26, 46],[6, 28, 50],[6, 30, 54],[6, 32, 58],[6, 34, 62],[6, 26, 46, 66],
              [6, 26, 48, 70],[6, 26, 50, 74],[6, 30, 54, 78],[6, 30, 56, 82],[6, 30, 58, 86],
@@ -415,7 +420,7 @@ QRCode.prototype = {
             funcpattern[6][i] = true;
             funcpattern[i][6] = true;
         }
-        
+
         // 形式情報（正確には機能パターンではないが順序を逆にしているためマスクさせないため）
         // [0][8]
         funcpattern[0][8] = true;
@@ -464,17 +469,17 @@ QRCode.prototype = {
                     funcpattern[simbolsize - j][i] = true;
                 }
             }
-                
+
         }
 
         this.functionPattern = funcpattern;
-        
+
     },
     /*
      * 最終的な文字列を取得するよ
      */
     getString : function(){
-        
+
         var mode = this.sirial.substring(0, 4);
         switch (mode){
         // Number mode
@@ -504,9 +509,9 @@ QRCode.prototype = {
         var tmp = this.sirial.substr(4, this.getStrNum(mode));
 
         str_num =  parseInt(tmp,2);
-        
+
         var bodybits = this.sirial.substr(4 + this.getStrNum(mode));
-        
+
         var bitgroup = 10;
         for(i = 0;i < (str_num / 3);i++){
             if((i + 1) < (str_num /3)){
@@ -519,10 +524,10 @@ QRCode.prototype = {
             var temp = bodybits.substr(i * 10,bitgroup);
             var aaa = new Number(parseInt(temp,2));
             str += aaa.toString();
-            
+
         }
         return str;
-        
+
     },
     /*
      * 英数字モード
@@ -540,9 +545,9 @@ QRCode.prototype = {
         var mode = "0010";
         var tmp = this.sirial.substr(4, this.getStrNum(mode));
         str_num =  parseInt(tmp,2);
-        
+
         var bodybits = this.sirial.substr(4 + this.getStrNum(mode));
-        
+
         var bitgroup = 11;
         for(i = 0;i < (str_num / 2);i++){
             if((str_num % 2) != 0){
@@ -589,7 +594,7 @@ QRCode.prototype = {
         }
         str = window["Unescape"+GetEscapeCodeType(sjis_encoded)](sjis_encoded);
 //      str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
-        
+
         return str;
     },
     /*
@@ -658,7 +663,7 @@ function RGBColor(red,green,blue,alpha){
     this.green = green;
     this.blue = blue;
     this.alpha = alpha;
-    
+
     this.isDark = function(){
         if(this.red == 0 && this.blue == 0 && this.green == 0){
             return true;
@@ -764,25 +769,25 @@ function BlockMap(version,errorCorrectLevel){
     }
     this.dataCode = new Array(data);
     this.rsBlock = new Array(rs);
-    
+
     for(i = 0;i < data;i++){
         this.dataCode[i] = "";
     }
     for(i = 0;i < rs;i++){
         this.rsBlock[i] = "";
     }
-    
+
     this.blockPoint = 0;
     this.blockPoint_inner = 0;
     this.dataCodeflag = true;
-    
+
     this.blockCount = new Array();
     for(i = 0;i < this.RS_BLOCK[version - 1][errorCorrectLevel].length;i = i + 3){
         for(j = 0;j < this.RS_BLOCK[version - 1][errorCorrectLevel][i];j++){
             this.blockCount.push(this.RS_BLOCK[version - 1][errorCorrectLevel][i + 2]);
         }
     }
-    
+
     this.dataBlock = new Array(this.blockCount.length);
     for(i = 0;i < this.blockCount.length;i++){
         this.dataBlock[i] = new Array(this.blockCount[i]);
@@ -824,10 +829,10 @@ BlockMap.prototype = {
         this.blockPoint_inner++;
     },
     /*
-     * 
+     *
      */
     makeDataBlock : function(version,errorCorrectLevel){
-        var offset = 0; 
+        var offset = 0;
         for(i = 0;i < this.blockCount.length;i++){
             for(j = 0;j < this.blockCount[i];j++){
                 if(this.RS_BLOCK[version - 1][errorCorrectLevel].length > 3 && this.RS_BLOCK[version - 1][errorCorrectLevel][0] <= i && (this.RS_BLOCK[version - 1][errorCorrectLevel][5] - 1) <= j) {
@@ -839,12 +844,12 @@ BlockMap.prototype = {
         }
     },
     /*
-     * 
+     *
      */
     silialize : function(version,errorCorrectLevel){
-        
+
         var sirial = "";
-        
+
         for(i = 0;i < this.dataBlock.length;i++){
             for(j = 0;j < this.dataBlock[i].length;j++){
                 sirial += this.dataBlock[i][j];
