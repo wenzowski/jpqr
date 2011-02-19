@@ -55,7 +55,7 @@ QRCode.prototype = {
         }
         dataCode.makeDataBlock(version,ecl);
         this.sirial = dataCode.silialize(version,ecl);
-        return this.getString();
+        return this.getString(this.sirial);
     },
     /**
      * ImageDataのニ値化
@@ -478,22 +478,22 @@ QRCode.prototype = {
     /*
      * 最終的な文字列を取得するよ
      */
-    getString : function(){
+    getString : function(sirial){
 
         var mode = this.sirial.substring(0, 4);
         switch (mode){
         // Number mode
         case "0001" :
-            return this.getNumber();
+            return this.getNumber(sirial);
         // Alphabet mode
         case "0010" :
-            return this.getAlphabet();
+            return this.getAlphabet(sirial);
         // 8bitByte mode
         case "0100" :
-            return this.get8bitBite();
+            return this.get8bitBite(sirial);
         // Kanji mode
         case "1000" :
-            return this.getKanji();
+            return this.getKanji(sirial);
         // unknown mode(ECI etc...)
         default :
             return "Sorry ...";
@@ -502,15 +502,15 @@ QRCode.prototype = {
     /*
      * 数字モード
      */
-    getNumber : function(){
+    getNumber : function(sirial){
         var str = "";
         var str_num = 0; // 文字数指示子
         var mode = "0001";
-        var tmp = this.sirial.substr(4, this.getStrNum(mode));
+        var tmp = sirial.substr(4, this.getStrNum(mode));
 
         str_num =  parseInt(tmp,2);
 
-        var bodybits = this.sirial.substr(4 + this.getStrNum(mode));
+        var bodybits = sirial.substr(4 + this.getStrNum(mode));
 
         var bitgroup = 10;
         for(i = 0;i < (str_num / 3);i++){
@@ -532,7 +532,7 @@ QRCode.prototype = {
     /*
      * 英数字モード
      */
-    getAlphabet : function(){
+    getAlphabet : function(sirial){
         var EI_SU_TABLE = {
                 0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',
                 10:'A',11:'B',12:'C',13:'D',14:'E',15:'F',16:'G',17:'H',18:'I',19:'J',
@@ -543,10 +543,10 @@ QRCode.prototype = {
         var str = "";
         var str_num = 0;
         var mode = "0010";
-        var tmp = this.sirial.substr(4, this.getStrNum(mode));
+        var tmp = sirial.substr(4, this.getStrNum(mode));
         str_num =  parseInt(tmp,2);
 
-        var bodybits = this.sirial.substr(4 + this.getStrNum(mode));
+        var bodybits = sirial.substr(4 + this.getStrNum(mode));
 
         var bitgroup = 11;
         for(i = 0;i < (str_num / 2);i++){
@@ -568,15 +568,15 @@ QRCode.prototype = {
     /*
      * 8ビットバイトモード
      */
-    get8bitBite : function(){
+    get8bitBite : function(sirial){
         var str = "";
         var str_num = 0;
         var mode = "0100";
-        var tmp = this.sirial.substr(4, this.getStrNum(mode));
+        var tmp = sirial.substr(4, this.getStrNum(mode));
         str_num =  parseInt(tmp,2);
         var sjis_encoded = "";
         var byte_flag = false;
-        var bodybits = this.sirial.substr(4 + this.getStrNum(mode));
+        var bodybits = sirial.substr(4 + this.getStrNum(mode));
 
         // 8bitByteモードでSJISを使うときの判定を追加
         for(i = 0;i < str_num;i++){
@@ -613,12 +613,42 @@ QRCode.prototype = {
     /*
      * 漢字モード
      */
-    getKanji : function(){
+    getKanji : function(sirial){
+        var str = "";
+        var str_num = 0;
+        var mode = "1000";
+        var tmp = sirial.substr(4, this.getStrNum(mode));
+        str_num =  parseInt(tmp,2);
+        var sjis_encoded = "";
+        var byte_flag = false;
+        var bodybits = sirial.substr(4 + this.getStrNum(mode));
+
+        for(i = 0;i < str_num;i++){
+            var temp = bodybits.substr(i * 13,13);
+            var intData = parseInt(temp,2);
+            var upper = intData / 0xc0;
+            var lower = intData % 0xc0;
+
+            var temp2 = upper << 8;
+            var tempWord = temp2 + lower;
+            if(tempWord + 0x8140 <= 0x9FFC){
+            	wordCode = tempWord + 0x8140;
+            }else{
+            	wordCode = tempWord + 0xC140;;
+            }
+            wordCodeDigit = wordCode.toString(16);
+            escapeString = "%" + wordCodeDigit.substr(0,2);
+            escapeString += "%" +  wordCodeDigit.substr(2,2);
+            str += UnescapeUTF8(EscapeUTF8(UnescapeSJIS(escapeString)));
+
+        }
+        return str;
+
     },
     /*
      * 文字数指定子のビット数を返す
      */
-    getStrNum : function(mode){
+    getStrNum : function(mode){0
         switch (mode){
         case "0001" :
             if(this.version <= 9){
