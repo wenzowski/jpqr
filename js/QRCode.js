@@ -496,7 +496,7 @@ QRCode.prototype = {
             return this.getKanji(sirial);
         // unknown mode(ECI etc...)
         default :
-            return "Sorry ...";
+            return "";
         }
     },
     /*
@@ -514,7 +514,7 @@ QRCode.prototype = {
 
         var bitgroup = 10;
         for(i = 0;i < (str_num / 3);i++){
-            if((i + 1) < (str_num /3)){
+            if((i + 1) > (str_num /3)){
                 if(str_num %3 == 1){
                     bitgroup = 4;
                 }else{
@@ -522,28 +522,30 @@ QRCode.prototype = {
                 }
             }
             var temp = bodybits.substr(i * 10,bitgroup);
-            var aaa = new Number(parseInt(temp,2));
-            str += aaa.toString();
+            var temp_str = new Number(parseInt(temp,2));
+            str += temp_str.toString();
 
         }
+
         // 終端でない場合再帰処理
-        if(str_num %3 != 0){
-            var next_point = (str_num / 3) * 10 + bitgroup;
-            var next_mode = bodybits.substr(next_point,4);
-            var next_bits = bodybits.substr(next_point);
-            if(next_mode != "0000"){
-            	str += this.getString(next_bits);
-            }
-        }else{
+        if(str_num %3 == 0){
             var next_point = (str_num / 3) * 10;
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
             	str += this.getString(next_bits);
             }
+        }else{
+        	var offset = str_num / 3;
+        	offset = Math.floor(offset);
+            var next_point = offset * 10 + bitgroup;
+            var next_mode = bodybits.substr(next_point,4);
+            var next_bits = bodybits.substr(next_point);
+            if(next_mode != "0000"){
+            	str += this.getString(next_bits);
+            }
 
         }
-
         return str;
 
     },
@@ -572,17 +574,18 @@ QRCode.prototype = {
                 bitgroup = 6;
             }
             var temp = bodybits.substr(i * bitgroup,bitgroup);
-            var aaa = parseInt(temp,2);
+            var temp_int = parseInt(temp,2);
             if((str_num % 2) != 0){
-                str += EI_SU_TABLE[aaa];
+                str += EI_SU_TABLE[temp_int];
             }else{
-                var upper = Math.floor(aaa / 45);
-                var lower = aaa % 45;
+                var upper = Math.floor(temp_int / 45);
+                var lower = temp_int % 45;
                 str += EI_SU_TABLE[upper] + EI_SU_TABLE[lower];
             }
         }
+
         // 終端でない場合再帰処理
-        if((str_num % 2) != 0){
+        if((str_num % 2) == 0){
             var next_point = (str_num / 2) * 11;
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
@@ -590,7 +593,9 @@ QRCode.prototype = {
             	str += this.getString(next_bits);
             }
         }else{
-            var next_point = (str_num / 2) * 11 + bitgroup;
+        	var offset = str_num / 2;
+        	offset = Math.floor(offset);
+            var next_point = offset * 11 + bitgroup;
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
@@ -629,6 +634,7 @@ QRCode.prototype = {
         }
         str = window["Unescape"+GetEscapeCodeType(sjis_encoded)](sjis_encoded);
 //      str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
+
         // 終端でない場合再帰処理
         var next_point = str_num * 8;
         var next_mode = bodybits.substr(next_point,4);
@@ -684,6 +690,7 @@ QRCode.prototype = {
             str += UnescapeUTF8(EscapeUTF8(UnescapeSJIS(escapeString)));
 
         }
+
         // 終端でない場合再帰処理
         var next_point = str_num * 13;
         var next_mode = bodybits.substr(next_point,4);
@@ -691,6 +698,7 @@ QRCode.prototype = {
         if(next_mode != "0000"){
         	str += this.getString(next_bits);
         }
+
         return str;
 
     },
