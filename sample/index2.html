@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>matubaunsou.com</title>
+        <link type="text/css" href="css/blitzer/jquery-ui-1.8.11.custom.css" rel="Stylesheet" />
+        <link type="text/css" rel="Stylesheet" href="js/colortip-1.0/colortip-1.0-jquery.css" />
+        <style type="text/css">
+            header {
+                display: block;
+                height: 72px;
+            }
+
+            nav {
+                float: right;
+            }
+        </style>
+        <script type="text/javascript" src="js/QRCode.js"></script>
+        <script type="text/javascript" src="js/ecl.js"></script>
+        <script type="text/javascript" src="js/jquery-1.5.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+        <script type="text/javascript" src="js/qr_decoder-jquery.js"></script>
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <h1>QRCODE Decoder sample</h1>
+            </div>
+        </header>
+        <section class="container-section">
+            <div id="content">
+                <div style="position: relative"><img class="qrcode" src="QRcode.png" /></div>
+                <script>
+                    $('.qrcode').QRDecode();
+                </script>
+            </div>
+        </section>
+        <footer>
+            <div class="container">
+                <div class="wrapper">
+                    <div class="fleft">Copy right - highgeo.sakura.ne.jp</div>
+                    <div class="fright">
+                        <a target="_blank" href="#">highgeo</a>All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </body>
+</html>

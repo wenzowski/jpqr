@@ -10,11 +10,32 @@ function QRCode() {
 }
 
 QRCode.prototype = {
+    getContents : function(src){
+        var image = new Image();
+        image.src = src;
+        var canvas_qr = document.getElementById("qr-canvas");
+        var context = canvas_qr.getContext('2d');
+        context.drawImage(image, 0, 0);
+        var imagedata = context.getImageData(0, 0, image.width, image.height);
+        return this.getContsnts(imagedata);
+
+    },
     getContsnts : function(imagedata){
+        imagedata.getPoints = function(x, y){
+            if (this.width < x) {
+                throw new Error("point error");
+            }
+            if (this.height < y) {
+                throw new Error("point error");
+            }
+            point = (x * 4) + (y * this.width * 4);
+            p = new RGBColor(this.data[point], this.data[point + 1], this.data[point + 2], this.data[point + 3]);
+            return p;
+        }
         imagedata = this.binarize(imagedata, 0.5);
         this.readData(imagedata);
         var simbolsize = version * 4 + 17;
-		this.version = version;
+        this.version = version;
         var mode = true;
         var ecl = 0;
         if(errorCorrectLevel == "01"){
@@ -58,12 +79,14 @@ QRCode.prototype = {
         return this.getString(this.sirial);
     },
     /**
-     * ImageDataのニ値化
-     *
-     * @param imageData 変換対象のImageData
-     * @param threshold 閾値 0 ～ 1.0 デフォルト0.5
-     * @return 変換後のImageData
-     */
+	 * ImageDataのニ値化
+	 *
+	 * @param imageData
+	 *            変換対象のImageData
+	 * @param threshold
+	 *            閾値 0 ～ 1.0 デフォルト0.5
+	 * @return 変換後のImageData
+	 */
     binarize : function (imageData, threshold) {
         var pixels = imageData.data;
         var length = pixels.length;
@@ -84,8 +107,8 @@ QRCode.prototype = {
         return imageData;
     },
     /*
-     * イメージデータをモジュールに変換
-     */
+	 * イメージデータをモジュールに変換
+	 */
     readData : function(imagedata){
         var firstpoint = null;
         var lastpoint = null;
@@ -110,9 +133,9 @@ QRCode.prototype = {
             }
         }
         modulesize = (findpoint[1] -firstpoint[1]) / 7;
-		modulesize = Math.floor(modulesize);
+        modulesize = Math.floor(modulesize);
         version = (((lastpoint[1] - firstpoint[1]) + 1) / modulesize - 17) / 4;
-		version = Math.floor(version);
+        version = Math.floor(version);
         var simbolsize = version * 4 + 17;
         // simbol matrix init
         var pix = new Array(simbolsize);
@@ -121,10 +144,10 @@ QRCode.prototype = {
         }
         for(i = 0;i < simbolsize;i++){
             for(j = 0;j < simbolsize;j++){
-				half = modulesize / 2;
-				half = Math.floor(half);
-				point_y = firstpoint[0] + (i * modulesize) + half;
-				point_x = firstpoint[1] + (j * modulesize) + half;
+                half = modulesize / 2;
+                half = Math.floor(half);
+                point_y = firstpoint[0] + (i * modulesize) + half;
+                point_x = firstpoint[1] + (j * modulesize) + half;
                 pix[i][j] = imagedata.getPoints(point_x,point_y).isDark();
             }
         }
@@ -260,11 +283,11 @@ QRCode.prototype = {
 
     },
     /*
-     * アンマスク
-     */
+	 * アンマスク
+	 */
     unmusk : function(i,j){
         switch (maskpattern){
-        case "000" :
+            case "000" :
                 if((i + j) % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -273,7 +296,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "001" :
+            case "001" :
                 if(i % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -282,7 +305,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "010" :
+            case "010" :
                 if(j % 3 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -291,7 +314,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "011" :
+            case "011" :
                 if((i + j) % 3 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -300,7 +323,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "100" :
+            case "100" :
                 if((Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -309,7 +332,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "101" :
+            case "101" :
                 if((i * j) % 2 + (i * j) % 3 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -318,7 +341,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "110" :
+            case "110" :
                 if(( (i * j) % 2 + (i * j) % 3) % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -327,7 +350,7 @@ QRCode.prototype = {
                     }
                 }
                 return this.pixcel[i][j];
-        case "111" :
+            case "111" :
                 if(( (i * j) % 3 + (i + j) % 2) % 2 == 0){
                     if(!this.pixcel[i][j]){
                         return true;
@@ -337,27 +360,27 @@ QRCode.prototype = {
                 }
                 return this.pixcel[i][j];
 
-        default :
-            throw new Error("bad maskPattern:" + maskPattern);
+            default :
+                throw new Error("bad maskPattern:" + maskPattern);
         }
     },
     /*
-     * ファンクションパターン判別
-     */
+	 * ファンクションパターン判別
+	 */
     isFunctionPattern : function(i,j){
         return this.functionPattern[i][j];
 
     },
     /*
-     *
-     */
+	 *
+	 */
     blockMap : function(){
         var dataCode = new Array();
         var rsBlock = new Array();
     },
     /*
-     * ファンクションパターン生成
-     */
+	 * ファンクションパターン生成
+	 */
     makeFunctionPattern : function(){
         var simbolsize = version * 4 + 17;
         var funcpattern = new Array(simbolsize);
@@ -392,15 +415,15 @@ QRCode.prototype = {
         this.functionPattern = funcpattern;
         // 位置合わせパターン
         alignment_pattern =
-            [[],[6, 18],[6, 22],[6, 26],[6, 30],[6, 34],[6, 22, 38],[6, 24, 42],
-             [6, 26, 46],[6, 28, 50],[6, 30, 54],[6, 32, 58],[6, 34, 62],[6, 26, 46, 66],
-             [6, 26, 48, 70],[6, 26, 50, 74],[6, 30, 54, 78],[6, 30, 56, 82],[6, 30, 58, 86],
-             [6, 34, 62, 90],[6, 28, 50, 72, 94],[6, 26, 50, 74, 98],[6, 30, 54, 78, 102],
-             [6, 28, 54, 80, 106],[6, 32, 58, 84, 110],[6, 30, 58, 86, 114],[6, 34, 62, 90, 118],
-             [6, 26, 50, 74, 98, 122],[6, 30, 54, 78, 102, 126],[6, 26, 52, 78, 104, 130],
-             [6, 30, 56, 82, 108, 134],[6, 34, 60, 86, 112, 138],[6, 30, 58, 86, 114, 142],
-             [6, 34, 62, 90, 118, 146],[6, 30, 54, 78, 102, 126, 150],[6, 24, 50, 76, 102, 128, 154],
-             [6, 28, 54, 80, 106, 132, 158],[6, 32, 58, 84, 110, 136, 162],[6, 26, 54, 82, 110, 138, 166],[6, 30, 58, 86, 114, 142, 170]];
+        [[],[6, 18],[6, 22],[6, 26],[6, 30],[6, 34],[6, 22, 38],[6, 24, 42],
+        [6, 26, 46],[6, 28, 50],[6, 30, 54],[6, 32, 58],[6, 34, 62],[6, 26, 46, 66],
+        [6, 26, 48, 70],[6, 26, 50, 74],[6, 30, 54, 78],[6, 30, 56, 82],[6, 30, 58, 86],
+        [6, 34, 62, 90],[6, 28, 50, 72, 94],[6, 26, 50, 74, 98],[6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],[6, 32, 58, 84, 110],[6, 30, 58, 86, 114],[6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],[6, 30, 54, 78, 102, 126],[6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],[6, 34, 60, 86, 112, 138],[6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],[6, 30, 54, 78, 102, 126, 150],[6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],[6, 32, 58, 84, 110, 136, 162],[6, 26, 54, 82, 110, 138, 166],[6, 30, 58, 86, 114, 142, 170]];
         var alignment = alignment_pattern[version - 1];
         for(i = 0;i < alignment.length;i++){
             for(j = 0;j < alignment.length;j++){
@@ -476,32 +499,32 @@ QRCode.prototype = {
 
     },
     /*
-     * 最終的な文字列を取得するよ
-     */
+	 * 最終的な文字列を取得するよ
+	 */
     getString : function(sirial){
 
         var mode = sirial.substring(0, 4);
         switch (mode){
-        // Number mode
-        case "0001" :
-            return this.getNumber(sirial);
-        // Alphabet mode
-        case "0010" :
-            return this.getAlphabet(sirial);
-        // 8bitByte mode
-        case "0100" :
-            return this.get8bitBite(sirial);
-        // Kanji mode
-        case "1000" :
-            return this.getKanji(sirial);
-        // unknown mode(ECI etc...)
-        default :
-            return "";
+            // Number mode
+            case "0001" :
+                return this.getNumber(sirial);
+            // Alphabet mode
+            case "0010" :
+                return this.getAlphabet(sirial);
+            // 8bitByte mode
+            case "0100" :
+                return this.get8bitBite(sirial);
+            // Kanji mode
+            case "1000" :
+                return this.getKanji(sirial);
+            // unknown mode(ECI etc...)
+            default :
+                return "";
         }
     },
     /*
-     * 数字モード
-     */
+	 * 数字モード
+	 */
     getNumber : function(sirial){
         var str = "";
         var str_num = 0; // 文字数指示子
@@ -533,16 +556,16 @@ QRCode.prototype = {
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
-            	str += this.getString(next_bits);
+                str += this.getString(next_bits);
             }
         }else{
-        	var offset = str_num / 3;
-        	offset = Math.floor(offset);
+            var offset = str_num / 3;
+            offset = Math.floor(offset);
             var next_point = offset * 10 + bitgroup;
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
-            	str += this.getString(next_bits);
+                str += this.getString(next_bits);
             }
 
         }
@@ -550,16 +573,56 @@ QRCode.prototype = {
 
     },
     /*
-     * 英数字モード
-     */
+	 * 英数字モード
+	 */
     getAlphabet : function(sirial){
         var EI_SU_TABLE = {
-                0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',
-                10:'A',11:'B',12:'C',13:'D',14:'E',15:'F',16:'G',17:'H',18:'I',19:'J',
-                20:'K',21:'L',22:'M',23:'N',24:'O',25:'P',26:'Q',27:'R',28:'S',29:'T',
-                30:'U',31:'V',32:'W',33:'X',34:'Y',35:'Z',36:' ',37:'$',38:'%',39:'*',
-                40:'+',41:'-',42:'.',43:'/',44:':'
-                };
+            0:'0',
+            1:'1',
+            2:'2',
+            3:'3',
+            4:'4',
+            5:'5',
+            6:'6',
+            7:'7',
+            8:'8',
+            9:'9',
+            10:'A',
+            11:'B',
+            12:'C',
+            13:'D',
+            14:'E',
+            15:'F',
+            16:'G',
+            17:'H',
+            18:'I',
+            19:'J',
+            20:'K',
+            21:'L',
+            22:'M',
+            23:'N',
+            24:'O',
+            25:'P',
+            26:'Q',
+            27:'R',
+            28:'S',
+            29:'T',
+            30:'U',
+            31:'V',
+            32:'W',
+            33:'X',
+            34:'Y',
+            35:'Z',
+            36:' ',
+            37:'$',
+            38:'%',
+            39:'*',
+            40:'+',
+            41:'-',
+            42:'.',
+            43:'/',
+            44:':'
+        };
         var str = "";
         var str_num = 0;
         var mode = "0010";
@@ -590,24 +653,24 @@ QRCode.prototype = {
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
-            	str += this.getString(next_bits);
+                str += this.getString(next_bits);
             }
         }else{
-        	var offset = str_num / 2;
-        	offset = Math.floor(offset);
+            var offset = str_num / 2;
+            offset = Math.floor(offset);
             var next_point = offset * 11 + bitgroup;
             var next_mode = bodybits.substr(next_point,4);
             var next_bits = bodybits.substr(next_point);
             if(next_mode != "0000"){
-            	str += this.getString(next_bits);
+                str += this.getString(next_bits);
             }
         }
 
         return str;
     },
     /*
-     * 8ビットバイトモード
-     */
+	 * 8ビットバイトモード
+	 */
     get8bitBite : function(sirial){
         var str = "";
         var str_num = 0;
@@ -633,34 +696,34 @@ QRCode.prototype = {
             }
         }
         str = window["Unescape"+GetEscapeCodeType(sjis_encoded)](sjis_encoded);
-//      str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
+        // str = UnescapeUTF8(EscapeUTF8(UnescapeSJIS(sjis_encoded)));
 
         // 終端でない場合再帰処理
         var next_point = str_num * 8;
         var next_mode = bodybits.substr(next_point,4);
         var next_bits = bodybits.substr(next_point);
         if(next_mode != "0000"){
-        	str += this.getString(next_bits);
+            str += this.getString(next_bits);
         }
 
         return str;
     },
     /*
-     * 8bitBytemode SJIS
-     */
+	 * 8bitBytemode SJIS
+	 */
     isSJISEncode : function(bytes){
         // SJIS low
         if(bytes >= 128 && bytes <= 159){
             return true;
-        //SJIS high
+        // SJIS high
         }else if(bytes >= 224 && bytes <= 255){
             return true;
         }
         return false;
     },
     /*
-     * 漢字モード
-     */
+	 * 漢字モード
+	 */
     getKanji : function(sirial){
         var str = "";
         var str_num = 0;
@@ -680,9 +743,9 @@ QRCode.prototype = {
             var temp2 = upper << 8;
             var tempWord = temp2 + lower;
             if(tempWord + 0x8140 <= 0x9FFC){
-            	wordCode = tempWord + 0x8140;
+                wordCode = tempWord + 0x8140;
             }else{
-            	wordCode = tempWord + 0xC140;;
+                wordCode = tempWord + 0xC140;;
             }
             wordCodeDigit = wordCode.toString(16);
             escapeString = "%" + wordCodeDigit.substr(0,2);
@@ -696,51 +759,52 @@ QRCode.prototype = {
         var next_mode = bodybits.substr(next_point,4);
         var next_bits = bodybits.substr(next_point);
         if(next_mode != "0000"){
-        	str += this.getString(next_bits);
+            str += this.getString(next_bits);
         }
 
         return str;
 
     },
     /*
-     * 文字数指定子のビット数を返す
-     */
-    getStrNum : function(mode){0
+	 * 文字数指定子のビット数を返す
+	 */
+    getStrNum : function(mode){
+        0
         switch (mode){
-        case "0001" :
-            if(this.version <= 9){
-                return 10;
-            }else if(this.version <= 26){
-                return 12;
-            }else{
-                return 14;
-            }
-        case "0010" :
-            if(this.version <= 9){
-                return 9;
-            }else if(this.version <= 26){
-                return 11;
-            }else{
-                return 13;
-            }
-        case "0100" :
-            if(this.version <= 9){
-                return 8;
-            }else if(this.version <= 26){
-                return 16;
-            }else{
-                return 16;
-            }
-        case "1000" :
-            if(this.version <= 9){
-                return 8;
-            }else if(this.version <= 26){
-                return 10;
-            }else{
-                return 12;
-            }
-        default :
-            return "Sorry ...";
+            case "0001" :
+                if(this.version <= 9){
+                    return 10;
+                }else if(this.version <= 26){
+                    return 12;
+                }else{
+                    return 14;
+                }
+            case "0010" :
+                if(this.version <= 9){
+                    return 9;
+                }else if(this.version <= 26){
+                    return 11;
+                }else{
+                    return 13;
+                }
+            case "0100" :
+                if(this.version <= 9){
+                    return 8;
+                }else if(this.version <= 26){
+                    return 16;
+                }else{
+                    return 16;
+                }
+            case "1000" :
+                if(this.version <= 9){
+                    return 8;
+                }else if(this.version <= 26){
+                    return 10;
+                }else{
+                    return 12;
+                }
+            default :
+                return "Sorry ...";
         }
     }
 }
@@ -762,91 +826,91 @@ function RGBColor(red,green,blue,alpha){
 
 function BlockMap(version,errorCorrectLevel){
     this.RS_BLOCK = [
-        // L M Q H
-        // 1
-        [[1, 26, 19],[1, 26, 16],[1, 26, 13],[1, 26, 9]],
-        // 2
-        [[1, 44, 34],[1, 44, 28],[1, 44, 22],[1, 44, 16]],
-        // 3
-        [[1, 70, 55],[1, 70, 44],[2, 35, 17],[2, 35, 13]],
-        // 4
-        [[1, 100, 80],[2, 50, 32],[2, 50, 24],[4, 25, 9]],
-        // 5
-        [[1, 134, 108],[2, 67, 43],[2, 33, 15, 2, 34, 16],[2, 33, 11, 2, 34, 12]],
-        // 6
-        [[2, 86, 68],[4, 43, 27],[4, 43, 19],[4, 43, 15]],
-        // 7
-        [[2, 98, 78],[4, 49, 31],[2, 32, 14, 4, 33, 15],[4, 39, 13, 1, 40, 14]],
-        // 8
-        [[2, 121, 97],[2, 60, 38, 2, 61, 39],[4, 40, 18, 2, 41, 19],[4, 40, 14, 2, 41, 15]],
-        // 9
-        [[2, 146, 116],[3, 58, 36, 2, 59, 37],[4, 36, 16, 4, 37, 17],[4, 36, 12, 4, 37, 13]],
-        // 10
-        [[2, 86, 68, 2, 87, 69],[4, 69, 43, 1, 70, 44],[6, 43, 19, 2, 44, 20],[6, 43, 15, 2, 44, 16]],
-        // 11
-        [[4,101,81],
-        [1,80,50,4,81,51],
-        [4,50,22,4,51,23],
-        [3,36,12,8,37,13]],
-	 	// 12
-	 	[[2, 116, 92, 2, 117, 93],[6, 58, 36, 2, 59, 37],[4, 46, 20, 6, 47, 21],[7, 42, 14, 4, 43, 15]],
-	 	// 13
-		[[4, 133, 107],[8, 59, 37, 1, 60, 38],[8, 44, 20, 4, 45, 21],[12, 33, 11, 4, 34, 12]],
-	 	// 14
-		[[3, 145, 115, 1, 146, 116],[4, 64, 40, 5, 65, 44],[11, 36, 16, 5, 37, 17],[11, 36, 12, 5, 37, 13]],
-	 	// 15
-		[[5, 109, 87, 1, 110, 88],[5, 65, 41, 5, 66, 42],[5, 54, 24, 7, 55, 25],[11, 36, 12, 7, 37, 13]],
-	 	// 16
-		[[5, 122, 98, 1, 123, 99],[7, 73, 45, 3, 74, 46],[15, 43, 19, 2, 44, 20],[3, 45, 15, 13, 46, 16]],
-	 	// 17
-		[[1, 135, 107, 5, 136, 108],[10, 74, 46, 1, 75, 47],[1, 50, 22, 15, 51, 23],[2, 42, 14, 17, 43, 15]],
-	 	// 18
-		[[5, 150, 120, 1, 151, 121],[9, 69, 43, 4, 70, 44],[17, 50, 22, 1, 51, 23],[2, 42, 14, 19, 43, 15]],
-	 	// 19
-		[[3, 141, 113, 4, 142, 114],[3, 70, 44, 11, 71, 45],[17, 47, 21, 4, 48, 22],[9, 39, 13, 16, 40, 14]],
-	 	// 20
-		[[3, 135, 107, 5, 136, 108],[3, 67, 41, 13, 68, 42],[15, 54, 24, 5, 55, 25],[15, 43, 15, 10, 44, 16]],
-	 	// 21
-		[[4, 144, 116, 4, 145, 117],[17, 68, 42],[17, 50, 22, 6, 51, 23],[19, 46, 16, 6, 47, 17]],
-	 	// 22
-		[[2, 139, 111, 7, 140, 112],[17, 74, 46],[7, 54, 24, 16, 55, 25],[34, 37, 13]],
-	 	// 23
-		[[4, 151, 121, 5, 152, 122],[4, 75, 47, 14, 76, 48],[11, 54, 24, 14, 55, 25],[16, 45, 15, 14, 46, 16]],
-	 	// 24
-		[[6, 147, 117, 4, 148, 118],[6, 73, 45, 14, 74, 46],[11, 54, 24, 16, 55, 25],[30, 46, 16, 2, 47, 17]],
-	 	// 25
-		[[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16]],
-	 	// 26
-		[[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17]],
-	 	// 27
-		[[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16]],
-	 	// 28
-		[[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16]],
-	 	// 29
-		[[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16]],
-	 	// 30
-		[[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16]],
-	 	// 31
-		[[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16]],
-	 	// 32
-		[[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16]],
-	 	// 33
-		[[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16]],
-	 	// 34
-		[[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17]],
-	 	// 35
-		[[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16]],
-	 	// 36
-		[[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16]],
-	 	// 37
-		[[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16]],
-	 	// 38
-		[[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16]],
-	 	// 39
-		[[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16]],
-	 	// 40
-		[[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]]
-     ];
+    // L M Q H
+    // 1
+    [[1, 26, 19],[1, 26, 16],[1, 26, 13],[1, 26, 9]],
+    // 2
+    [[1, 44, 34],[1, 44, 28],[1, 44, 22],[1, 44, 16]],
+    // 3
+    [[1, 70, 55],[1, 70, 44],[2, 35, 17],[2, 35, 13]],
+    // 4
+    [[1, 100, 80],[2, 50, 32],[2, 50, 24],[4, 25, 9]],
+    // 5
+    [[1, 134, 108],[2, 67, 43],[2, 33, 15, 2, 34, 16],[2, 33, 11, 2, 34, 12]],
+    // 6
+    [[2, 86, 68],[4, 43, 27],[4, 43, 19],[4, 43, 15]],
+    // 7
+    [[2, 98, 78],[4, 49, 31],[2, 32, 14, 4, 33, 15],[4, 39, 13, 1, 40, 14]],
+    // 8
+    [[2, 121, 97],[2, 60, 38, 2, 61, 39],[4, 40, 18, 2, 41, 19],[4, 40, 14, 2, 41, 15]],
+    // 9
+    [[2, 146, 116],[3, 58, 36, 2, 59, 37],[4, 36, 16, 4, 37, 17],[4, 36, 12, 4, 37, 13]],
+    // 10
+    [[2, 86, 68, 2, 87, 69],[4, 69, 43, 1, 70, 44],[6, 43, 19, 2, 44, 20],[6, 43, 15, 2, 44, 16]],
+    // 11
+    [[4,101,81],
+    [1,80,50,4,81,51],
+    [4,50,22,4,51,23],
+    [3,36,12,8,37,13]],
+    // 12
+    [[2, 116, 92, 2, 117, 93],[6, 58, 36, 2, 59, 37],[4, 46, 20, 6, 47, 21],[7, 42, 14, 4, 43, 15]],
+    // 13
+    [[4, 133, 107],[8, 59, 37, 1, 60, 38],[8, 44, 20, 4, 45, 21],[12, 33, 11, 4, 34, 12]],
+    // 14
+    [[3, 145, 115, 1, 146, 116],[4, 64, 40, 5, 65, 44],[11, 36, 16, 5, 37, 17],[11, 36, 12, 5, 37, 13]],
+    // 15
+    [[5, 109, 87, 1, 110, 88],[5, 65, 41, 5, 66, 42],[5, 54, 24, 7, 55, 25],[11, 36, 12, 7, 37, 13]],
+    // 16
+    [[5, 122, 98, 1, 123, 99],[7, 73, 45, 3, 74, 46],[15, 43, 19, 2, 44, 20],[3, 45, 15, 13, 46, 16]],
+    // 17
+    [[1, 135, 107, 5, 136, 108],[10, 74, 46, 1, 75, 47],[1, 50, 22, 15, 51, 23],[2, 42, 14, 17, 43, 15]],
+    // 18
+    [[5, 150, 120, 1, 151, 121],[9, 69, 43, 4, 70, 44],[17, 50, 22, 1, 51, 23],[2, 42, 14, 19, 43, 15]],
+    // 19
+    [[3, 141, 113, 4, 142, 114],[3, 70, 44, 11, 71, 45],[17, 47, 21, 4, 48, 22],[9, 39, 13, 16, 40, 14]],
+    // 20
+    [[3, 135, 107, 5, 136, 108],[3, 67, 41, 13, 68, 42],[15, 54, 24, 5, 55, 25],[15, 43, 15, 10, 44, 16]],
+    // 21
+    [[4, 144, 116, 4, 145, 117],[17, 68, 42],[17, 50, 22, 6, 51, 23],[19, 46, 16, 6, 47, 17]],
+    // 22
+    [[2, 139, 111, 7, 140, 112],[17, 74, 46],[7, 54, 24, 16, 55, 25],[34, 37, 13]],
+    // 23
+    [[4, 151, 121, 5, 152, 122],[4, 75, 47, 14, 76, 48],[11, 54, 24, 14, 55, 25],[16, 45, 15, 14, 46, 16]],
+    // 24
+    [[6, 147, 117, 4, 148, 118],[6, 73, 45, 14, 74, 46],[11, 54, 24, 16, 55, 25],[30, 46, 16, 2, 47, 17]],
+    // 25
+    [[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16]],
+    // 26
+    [[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17]],
+    // 27
+    [[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16]],
+    // 28
+    [[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16]],
+    // 29
+    [[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16]],
+    // 30
+    [[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16]],
+    // 31
+    [[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16]],
+    // 32
+    [[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16]],
+    // 33
+    [[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16]],
+    // 34
+    [[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17]],
+    // 35
+    [[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16]],
+    // 36
+    [[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16]],
+    // 37
+    [[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16]],
+    // 38
+    [[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16]],
+    // 39
+    [[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16]],
+    // 40
+    [[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]]
+    ];
 
     var data = 0;
     var rs = 0;
@@ -887,8 +951,8 @@ function BlockMap(version,errorCorrectLevel){
 }
 BlockMap.prototype = {
     /*
-     * データコードにアサイン
-     */
+	 * データコードにアサイン
+	 */
     push : function(bits){
         if(this.blockPoint_inner >= 8){
             if(this.blockPoint == this.dataCode.length - 1 && this.dataCodeflag){
@@ -916,8 +980,8 @@ BlockMap.prototype = {
         this.blockPoint_inner++;
     },
     /*
-     *
-     */
+	 *
+	 */
     makeDataBlock : function(version,errorCorrectLevel){
         var offset = 0;
         for(i = 0;i < this.blockCount.length;i++){
@@ -931,8 +995,8 @@ BlockMap.prototype = {
         }
     },
     /*
-     *
-     */
+	 *
+	 */
     silialize : function(version,errorCorrectLevel){
 
         var sirial = "";
