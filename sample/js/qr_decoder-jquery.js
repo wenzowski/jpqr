@@ -12,7 +12,7 @@ jQuery.fn.QRDecode = function(){
                 var qr = new QRCode();
                 var str = qr.getContents($(this).attr("src"));
                 var result = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1'>$1</a>");
-                $('#qr-dialog').html(str);
+                $('#qr-dialog').html(result);
                 $('#qr-dialog').dialog();
             });
     });
